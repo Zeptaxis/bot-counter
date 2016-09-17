@@ -76,6 +76,8 @@ bot.on('message', message => {
 			}
 		} else if(message.content == "!uid") {
 			message.channel.sendMessage('Your UID is : ' + message.author.id)
+		} else if(message.content == "!counterhelp") {
+			message.channel.sendMessage('Command list : https://github.com/Zeptaxis/bot-counter/blob/master/commandlist.md');
 		} else {
 			var counterName = content[0].substring(1);
 			if (counters[counterName]) {
