@@ -1,4 +1,12 @@
+// to read the settings file
 var PropertiesReader = require('properties-reader');
+
+// to interact with Discord
+const Discord = require('discord.js');
+
+// to write in files
+var fs = require("fs");
+
 var properties;
 try {
 	properties = PropertiesReader('settings.properties')
@@ -7,20 +15,19 @@ try {
 	process.exit(1);
 };
 
-
-
-const Discord = require('discord.js');
+// initialize the bot
 const bot = new Discord.Client();
+
 const token = properties.get('token');
 if(!token) {
 	console.log("settings.properties file is missing a 'token = <your token>' line. Check README if you don't know how to get your token.");
 	process.exit(1);
 };
 
+// retrieve the ownerID from the config file
 var ownerID = properties.get('ownerID');
 
-var fs = require("fs");
-
+// the regex we will use to check if the name is valid
 var inputFilter = /^[A-Za-z0-9]+$/;
 
 var counters;
@@ -82,10 +89,10 @@ bot.on('message', message => {
 				if (content.length == 1) {
 					message.channel.sendMessage(getTextView(counterName));
 				} else {
-					if (content[1] == '+') {
+					if (content[1].startsWith('+')) {
 						incrementValue(counterName);
 						message.channel.sendMessage(getTextPlus(counterName));
-					} else if (content[1] == '-') {
+					} else if (content[1].startsWith('-')) {
 						decrementValue(counterName);
 						message.channel.sendMessage(getTextMinus(counterName));
 					} else if (content[1] == 'reset') {
