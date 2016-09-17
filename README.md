@@ -25,5 +25,5 @@ You can then show the counter with `!name` and interact with it with `!name +` o
 Full documentation will come soon !
 
 
- [Node.js] : https://nodejs.org/
- [Discord API] : https://discordapp.com/developers/applications/me
+[Node.js]: https://nodejs.org/
+[Discord API]: https://discordapp.com/developers/applications/me
