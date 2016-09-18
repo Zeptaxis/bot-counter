@@ -94,13 +94,13 @@ bot.on('message', message => {
 					message.channel.sendMessage(getTextView(counterName));
 				} else {
 					if (content[1].startsWith('+')) {
-						if(setValue(counterName,message.content.substring(content[0].length+2),'+')) {
+						if(setValue(counterName,content[1].length == 1 ? "1" : message.content.substring(content[0].length+2),'+')) {
 							message.channel.sendMessage(getTextPlus(counterName));
 						} else {
 							message.channel.sendMessage("There was an error parsing your input.");
 						}
 					} else if (content[1].startsWith('-')) {
-						if(setValue(counterName,message.content.substring(content[0].length+2),'-')) {
+						if(setValue(counterName,content[1].length == 1 ? "1" : message.content.substring(content[0].length+2),'-')) {
 							message.channel.sendMessage(getTextMinus(counterName));
 						} else {
 							message.channel.sendMessage("There was an error parsing your input.");
@@ -190,7 +190,6 @@ function resetValue(title) {
 
 //
 function setValue(title, value, operator) {
-	console.log(value);
 	try {
 		var val = math.eval(value);
 		switch(operator) {
