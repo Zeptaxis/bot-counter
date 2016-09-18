@@ -27,6 +27,9 @@ Show the counter's value with `!name`.
 Interact with it with `!name +` or `!name -`.  
 Mathematics are supported : `!name +5*2+3` will add 13 to `name`.
 
+#### Leaderboards
+Each counter has its own leaderboard. You can increase any user's point by mentioning it after the `!counter +` command. See examples if unclear.
+
 #### Customization
 You can customize each counter with `!name edit property newValue`, where `property` can be one of the following :
  - `step` : The step that is used when you type `!counter +`. Must be an integer or it will be reset to 1.
@@ -35,6 +38,7 @@ You can customize each counter with `!name edit property newValue`, where `prope
  - `textMinus` : The text displayed when you call `!counter -...`.
  - `textReset` : The text displayed when you call `!counter reset`.
  - `textValue` : The text displayed when you call `!counter value ...`.
+ - `textLeaderboard` : The text displayed when you call `!counter leaderboard`.
 
 All the text properties can contain some variables that will be dynamically replaced. These are :
  - `%value%` : will be replaced by the counter's current value.
@@ -45,7 +49,10 @@ Create a counter : `!addcounter badjokes`
 Customize the counter : `!badjokes edit textPlus He did it again. This is the %value% time.`  
 Add to the counter : `!badjokes +`
 Which will output : `He did it again. This is the 1 time.`  
-Delete the counter : `!delcounter badjokes`
+Delete the counter : `!delcounter badjokes`  
+Add 5 points to John : `!badjokes +5 @John`  
+Add 3 points to Lynda : `!badjokes +3 @Lynda`  
+See the leaderboard : `!badjokes leaderboard`
 
 ---
 
