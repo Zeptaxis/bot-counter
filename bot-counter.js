@@ -190,7 +190,6 @@ function resetValue(title) {
 
 //
 function setValue(title, value, operator) {
-	console.log(value);
 	try {
 		var val = math.eval(value);
 		switch(operator) {
