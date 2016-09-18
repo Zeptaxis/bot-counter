@@ -31,6 +31,8 @@ var ownerID = properties.get('ownerID');
 
 // the regex we will use to check if the name is valid
 var inputFilter = /^[A-Za-z0-9]+$/;
+// the regex we will use to replace user mentions in message
+var mentionFilter = /\s(<?@\S+)/g;
 
 var counters;
 try {
@@ -45,11 +47,13 @@ bot.on('ready', () => {
 });
 
 bot.on('message', message => {
+
 	/*message.mentions.users.forEach(function (value, key, mapObj) {
-	console.log(value.id);
+		console.log(value.id);
 	});*/
 
 	if (message.content.startsWith('!') && message.content.length > 1) {
+		message.content = message.content.replace(mentionFilter,"");
 		var content = message.content.split(" ");
 
 		if (message.content.startsWith('!addcounter') || message.content.startsWith('!ac')) {
