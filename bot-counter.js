@@ -35,6 +35,7 @@ var inputFilter = /^[A-Za-z0-9]+$/;
 var mentionFilter = /\s(<?@\S+)/g;
 
 // this is a counter prototype
+// we do not directly use it in the code as the references in javascript are weird
 var dummy = {
 	owner : '0',
 	value : 0,
@@ -45,7 +46,14 @@ var dummy = {
 	textMinus : 'The value of %name% has been decremented. New value : %value%.',
 	textReset : 'The value of %name% has been reset to %value%.',
 	textValue : 'The value of %name% has been set to %value%.',
+	textLeaderboard : 'Current leaderboard for %name% :',
 	leaderboard : {}
+};
+
+var userLeaderboardDummy = {
+	id : '0',
+	username : 'dummy',
+	value : 0
 };
 
 var counters;
@@ -61,10 +69,6 @@ bot.on('ready', () => {
 });
 
 bot.on('message', message => {
-
-	/*message.mentions.users.forEach(function (value, key, mapObj) {
-		console.log(value.id);
-	});*/
 
 	if (message.content.startsWith('!') && message.content.length > 1) {
 		message.content = message.content.replace(mentionFilter,"");
@@ -97,6 +101,7 @@ bot.on('message', message => {
 		} else if (message.content == "!cleardb") {
 			if (message.author.id == ownerID) {
 				counters = {};
+				message.channel.sendMessage('Local database has been cleared.');
 				saveToDisk();
 			} else {
 				message.channel.sendMessage('Sorry, only the owner can do this.');
@@ -104,6 +109,7 @@ bot.on('message', message => {
 		} else if (message.content == "!upgradecounters") {
 			if (message.author.id == ownerID) {
 				upgradeCounters();
+				message.channel.sendMessage('Counters have been upgraded. You MUST restart the bot, or weird behaviour could happen.');
 				saveToDisk();
 			} else {
 				message.channel.sendMessage('Sorry, only the owner can do this.');
@@ -119,13 +125,13 @@ bot.on('message', message => {
 					message.channel.sendMessage(getTextView(counterName));
 				} else {
 					if (content[1].startsWith('+')) {
-						if(setValue(counterName,content[1].length == 1 ? "1" : message.content.substring(content[0].length+2),'+')) {
+						if(setValue(counterName,content[1].length == 1 ? "1" : message.content.substring(content[0].length+2),'+',message.mentions.users)) {
 							message.channel.sendMessage(getTextPlus(counterName));
 						} else {
 							message.channel.sendMessage("There was an error parsing your input.");
 						}
 					} else if (content[1].startsWith('-')) {
-						if(setValue(counterName,content[1].length == 1 ? "1" : message.content.substring(content[0].length+2),'-')) {
+						if(setValue(counterName,content[1].length == 1 ? "1" : message.content.substring(content[0].length+2),'-',message.mentions.users)) {
 							message.channel.sendMessage(getTextMinus(counterName));
 						} else {
 							message.channel.sendMessage("There was an error parsing your input.");
@@ -145,10 +151,38 @@ bot.on('message', message => {
 						if (counters[counterName][content[2]]) {
 							var newValue = message.content.substr(message.content.indexOf(content[2]) + content[2].length + 1);
 							setCounterText(counterName, content[2], newValue);
+							message.channel.sendMessage('Property ' + content[2] + ' has been changed.');
 						}
 					} else if (content[1] == 'show') {
 						if (counters[counterName][content[2]]) {
 							message.channel.sendMessage(content[2] + ' : ' + counters[counterName][content[2]]);
+						}
+					} else if (content[1] == 'leaderboard') {
+						var sortable = [];
+
+						for(var key in counters[counterName].leaderboard) {
+							sortable.push(counters[counterName].leaderboard[key]);
+						}
+
+						sortable.sort(function(a,b){
+							return b.value-a.value;
+						});
+
+						var output = '```\r\n';
+						output += getTextLeaderboard(counterName) + '\r\n\r\n';
+						for(var i = 0; i < sortable.length; i++) {
+							output += (i+1) + '. ' + sortable[i].username + ' : ' + sortable[i].value + '\r\n';
+						}
+						output += '```';
+						message.channel.sendMessage(output);
+
+					} else if (content[1] == 'clearleaderboard') {
+						if (message.author.id == ownerID) {
+							counters[counterName].leaderboard = {};
+							message.channel.sendMessage('Leaderboard for ' + counterName + ' has been cleared.');
+							saveToDisk();
+						} else {
+							message.channel.sendMessage('Sorry, only the owner can do this.');
 						}
 					}
 					saveToDisk();
@@ -166,9 +200,19 @@ function addCounter(id, title) {
 		if (counters[title]) {
 			return 2;
 		} else {
-			counters[title] = dummy;
-			counters[title].owner = id;
-			counters[title].name = title;
+			counters[title] = {
+				owner : id,
+				value : 0,
+				step : 1,
+				name : title,
+				textView : 'Value of %name% : %value%',
+				textPlus : 'The value of %name% has been incremented. New value : %value%.',
+				textMinus : 'The value of %name% has been decremented. New value : %value%.',
+				textReset : 'The value of %name% has been reset to %value%.',
+				textValue : 'The value of %name% has been set to %value%.',
+				textLeaderboard : 'Current leaderboard for %name% :',
+				leaderboard : {}
+			};
 			saveToDisk();
 			return 1;
 		}
@@ -197,27 +241,53 @@ function getTextValue(title) {
 	return counters[title].textValue.replace('%name%', counters[title].name).replace('%value%', counters[title].value);
 }
 
+function getTextLeaderboard(title) {
+	return counters[title].textLeaderboard.replace('%name%', counters[title].name).replace('%value%', counters[title].value);
+}
+
 function setCounterText(title, textToChange, newText) {
 	counters[title][textToChange] = newText;
 }
 
 function resetValue(title) {
-	setValue(title, getValue(title) + 1);
+	setValue(title, dummy.value,'=', []);
 }
 
 //
-function setValue(title, value, operator) {
+function setValue(title, value, operator, mentions) {
 	try {
 		var val = math.eval(value);
+
+		// ensure that each mentionned user is present in the leaderboard, creating them when needed
+
+		mentions.forEach(function(value2) {
+			if(!counters[title].leaderboard[value2.id]) {
+				counters[title].leaderboard[value2.id] = {
+					id : value2.id,
+					username : value2.username,
+					value : 0
+				};
+			}
+		});
+
 		switch(operator) {
 			case '+':
-				counters[title].value = counters[title].value + val;
+				counters[title].value += val;
+				mentions.forEach(function(value) {
+					counters[title].leaderboard[value.id].value += val;
+				});
 			break;
 			case '-':
-				counters[title].value = counters[title].value - val;
+				counters[title].value -= val;
+				mentions.forEach(function(value) {
+					counters[title].leaderboard[value.id].value -= val;
+				});
 			break;
 			case '=':
 				counters[title].value = val;
+				mentions.forEach(function(value) {
+					counters[title].leaderboard[value.id].value = val;
+				});
 			break;
 		}
 		return true;
