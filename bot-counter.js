@@ -6,6 +6,8 @@ const Discord = require('discord.js');
 
 // to write in files
 var fs = require("fs");
+// to eval expressions
+var math = require("mathjs");
 
 var properties;
 try {
@@ -84,7 +86,7 @@ bot.on('message', message => {
 		} else if(message.content == "!uid") {
 			message.channel.sendMessage('Your UID is : ' + message.author.id)
 		} else if(message.content == "!counterhelp") {
-			message.channel.sendMessage('Command list : https://github.com/Zeptaxis/bot-counter/blob/master/commandlist.md');
+			message.channel.sendMessage('Command list : https://github.com/Zeptaxis/bot-counter/blob/master/README.md');
 		} else {
 			var counterName = content[0].substring(1);
 			if (counters[counterName]) {
@@ -92,18 +94,27 @@ bot.on('message', message => {
 					message.channel.sendMessage(getTextView(counterName));
 				} else {
 					if (content[1].startsWith('+')) {
-						incrementValue(counterName);
-						message.channel.sendMessage(getTextPlus(counterName));
+						if(setValue(counterName,message.content.substring(content[0].length+2),'+')) {
+							message.channel.sendMessage(getTextPlus(counterName));
+						} else {
+							message.channel.sendMessage("There was an error parsing your input.");
+						}
 					} else if (content[1].startsWith('-')) {
-						decrementValue(counterName);
-						message.channel.sendMessage(getTextMinus(counterName));
+						if(setValue(counterName,message.content.substring(content[0].length+2),'-')) {
+							message.channel.sendMessage(getTextMinus(counterName));
+						} else {
+							message.channel.sendMessage("There was an error parsing your input.");
+						}
 					} else if (content[1] == 'reset') {
 						resetValue(counterName);
 						message.channel.sendMessage(getTextReset(counterName));
 					} else if (content[1] == 'value') {
 						if (content[2]) {
-							setValue(counterName, content[2]);
-							message.channel.sendMessage(getTextValue(counterName));
+							if(setValue(counterName, message.content.substring(content[0].length+1+content[1].length+1), '=')) {
+								message.channel.sendMessage(getTextValue(counterName));
+							} else {
+								message.channel.sendMessage("There was an error parsing your input.");
+							}
 						}
 					} else if (content[1] == 'edit') {
 						if (counters[counterName][content[2]]) {
@@ -173,25 +184,30 @@ function setCounterText(title, textToChange, newText) {
 	counters[title][textToChange] = newText;
 }
 
-function incrementValue(title) {
-	setValue(title, getValue(title) + getStep(title));
-}
-
-function decrementValue(title) {
-	setValue(title, getValue(title) - getStep(title));
-}
-
 function resetValue(title) {
 	setValue(title, getValue(title) + 1);
 }
 
-// set the value of the specified counter. The value is sanitized to be always an integer.
-function setValue(title, newValue) {
-	var val = parseInt(newValue);
-	if (!isNaN(val)) {
-		counters[title].value = val;
+//
+function setValue(title, value, operator) {
+	console.log(value);
+	try {
+		var val = math.eval(value);
+		switch(operator) {
+			case '+':
+				counters[title].value = counters[title].value + val;
+			break;
+			case '-':
+				counters[title].value = counters[title].value - val;
+			break;
+			case '=':
+				counters[title].value = val;
+			break;
+		}
+		return true;
+	} catch (err) {
+		return false;
 	}
-
 }
 
 function getValue(title) {
