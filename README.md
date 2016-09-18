@@ -8,6 +8,7 @@ A Discord bot that can count things.
     - `npm install --save discord.js --production --no-optional`
     - `npm install properties-reader`
     - `npm install mathjs`
+ - Rename the `settings-template.properties` file to `settings.properties`.
  - Edit the `settings.properties` file and add your Discord API token. While you are at it, you can add your ID in the file so the bot know you are its owner. If you don't know how to get your ID, check next section.
  - You can get your Discord API token [here][Discord API]. You need to create a new application, then create a bot user, then your token will be available in the `APP BOT USER` section.
  - To invite your bot to your server, copy the following link and replace the `12345678` with the `Client ID` you can find on your application's page. `https://discordapp.com/oauth2/authorize?client_id=12345678&scope=bot&permissions=66186303`
