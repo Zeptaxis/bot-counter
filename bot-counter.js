@@ -34,6 +34,20 @@ var inputFilter = /^[A-Za-z0-9]+$/;
 // the regex we will use to replace user mentions in message
 var mentionFilter = /\s(<?@\S+)/g;
 
+// this is a counter prototype
+var dummy = {
+	owner : '0',
+	value : 0,
+	step : 1,
+	name : 'dummy',
+	textView : 'Value of %name% : %value%',
+	textPlus : 'The value of %name% has been incremented. New value : %value%.',
+	textMinus : 'The value of %name% has been decremented. New value : %value%.',
+	textReset : 'The value of %name% has been reset to %value%.',
+	textValue : 'The value of %name% has been set to %value%.',
+	leaderboard : {}
+};
+
 var counters;
 try {
 	counters = require('./counters.json');
@@ -83,6 +97,13 @@ bot.on('message', message => {
 		} else if (message.content == "!cleardb") {
 			if (message.author.id == ownerID) {
 				counters = {};
+				saveToDisk();
+			} else {
+				message.channel.sendMessage('Sorry, only the owner can do this.');
+			}
+		} else if (message.content == "!upgradecounters") {
+			if (message.author.id == ownerID) {
+				upgradeCounters();
 				saveToDisk();
 			} else {
 				message.channel.sendMessage('Sorry, only the owner can do this.');
@@ -145,17 +166,9 @@ function addCounter(id, title) {
 		if (counters[title]) {
 			return 2;
 		} else {
-			counters[title] = {
-				owner : id,
-				value : 0,
-				step : 1,
-				name : title,
-				textView : 'Value of %name% : %value%',
-				textPlus : 'The value of %name% has been incremented. New value : %value%.',
-				textMinus : 'The value of %name% has been decremented. New value : %value%.',
-				textReset : 'The value of %name% has been reset to %value%.',
-				textValue : 'The value of %name% has been set to %value%.'
-			};
+			counters[title] = dummy;
+			counters[title].owner = id;
+			counters[title].name = title;
 			saveToDisk();
 			return 1;
 		}
@@ -251,4 +264,21 @@ function delCounter(id, title) {
 
 function saveToDisk() {
 	fs.writeFile('counters.json', JSON.stringify(counters), "utf8");
+}
+
+// this function take the existing counters and upgrade them to the newest counter prototype
+function upgradeCounters() {
+	for (var key in counters) {
+		if (!counters.hasOwnProperty(key)) continue;
+
+		for(var key2 in dummy) {
+			if (!dummy.hasOwnProperty(key2)) continue;
+
+			if(!counters[key][key2]) {
+				counters[key][key2] = dummy[key2];
+			}
+
+		}
+
+	}
 }
