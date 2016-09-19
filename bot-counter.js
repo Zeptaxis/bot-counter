@@ -118,6 +118,13 @@ bot.on('message', message => {
 			message.channel.sendMessage('Your UID is : ' + message.author.id)
 		} else if(message.content == "!counterhelp") {
 			message.channel.sendMessage('Command list : https://github.com/Zeptaxis/bot-counter/blob/master/README.md');
+		} else if(message.content == "!listcounters") {
+			var output = '```\r\n';
+			for(var key in counters) {
+				output += counters[key].name + '\r\n';
+			}
+			output += '```';
+			message.channel.sendMessage(output);
 		} else {
 			var counterName = content[0].substring(1);
 			if (counters[counterName]) {
