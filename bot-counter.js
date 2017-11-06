@@ -88,7 +88,7 @@ bot.on('message', message => {
             if (content.length == 2) {
                 var state = addCounter(message.author.id, content[1]);
                 if (state == 1) {
-                    message.channel.sendMessage('The counter has been correctly added.\r\nYou can use it with !' + content[1] + ' [ + | - ].');
+                    message.channel.sendMessage('The counter has been correctly added.\r\nYou can use it with ' + prefix + content[1] + ' [ + | - ].');
                 } else if (state == 2) {
                     message.channel.sendMessage('A counter with this name already exists, please choose another one.');
                 } else if (state == 3) {
