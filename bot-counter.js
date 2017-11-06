@@ -342,7 +342,7 @@ function getStep(title) {
 function delCounter(id, title) {
     if (inputFilter.test(title)) {
         if (counters[title]) {
-            if (id != counters[title].owner && id != OwnerID) {
+            if (id != counters[title].owner && id != ownerID) {
                 return 3;
             } else {
                 delete counters[title];
