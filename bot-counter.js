@@ -29,6 +29,16 @@ if(!token) {
 // retrieve the ownerID from the config file
 var ownerID = properties.get('ownerID');
 
+// retrieve the prefix for the bot
+var prefix;
+try {
+    prefix = properties.get('prefix');
+} catch (err) {
+    console.log("Adding setting 'prefix' to settings.properties");
+    properties.set('prefix', '!');
+    prefix = "!";
+};
+
 // the regex we will use to check if the name is valid
 var inputFilter = /^[A-Za-z0-9]+$/;
 // the regex we will use to replace user mentions in message
@@ -70,11 +80,11 @@ bot.on('ready', () => {
 
 bot.on('message', message => {
 
-	if (message.content.startsWith('!') && message.content.length > 1) {
+	if (message.content.startsWith(prefix) && message.content.length > 1) {
 		message.content = message.content.replace(mentionFilter,"");
 		var content = message.content.split(" ");
 
-		if (message.content.startsWith('!addcounter') || message.content.startsWith('!ac')) {
+		if (message.content.startsWith(prefix + 'addcounter') || message.content.startsWith(prefix + 'ac')) {
 			if (content.length == 2) {
 				var state = addCounter(message.author.id, content[1]);
 				if (state == 1) {
@@ -85,7 +95,7 @@ bot.on('message', message => {
 					message.channel.sendMessage('Your counter name contains illegal characters. Please match /^[A-Za-z0-9]+$/.');
 				}
 			}
-		} else if (message.content.startsWith('!delcounter') || message.content.startsWith('!dc')) {
+		} else if (message.content.startsWith(prefix + 'delcounter') || message.content.startsWith('!dc')) {
 			if (content.length == 2) {
 				var state = delCounter(message.author.id, content[1]);
 				if (state == 1) {
@@ -96,9 +106,9 @@ bot.on('message', message => {
 					message.channel.sendMessage('You are not the owner of this counter.');
 				}
 			}
-		} else if (message.content == "!log") {
+		} else if (message.content == prefix + "log") {
 			console.log(counters);
-		} else if (message.content == "!cleardb") {
+		} else if (message.content == prefix + "cleardb") {
 			if (message.author.id == ownerID) {
 				counters = {};
 				message.channel.sendMessage('Local database has been cleared.');
@@ -106,7 +116,7 @@ bot.on('message', message => {
 			} else {
 				message.channel.sendMessage('Sorry, only the owner can do this.');
 			}
-		} else if (message.content == "!upgradecounters") {
+		} else if (message.content == prefix + "upgradecounters") {
 			if (message.author.id == ownerID) {
 				upgradeCounters();
 				message.channel.sendMessage('Counters have been upgraded. You MUST restart the bot, or weird behaviour could happen.');
@@ -114,11 +124,11 @@ bot.on('message', message => {
 			} else {
 				message.channel.sendMessage('Sorry, only the owner can do this.');
 			}
-		} else if(message.content == "!uid") {
+		} else if(message.content == prefix + "uid") {
 			message.channel.sendMessage('Your UID is : ' + message.author.id)
-		} else if(message.content == "!counterhelp") {
-			message.channel.sendMessage('Command list : https://github.com/Zeptaxis/bot-counter/blob/master/README.md');
-		} else if(message.content == "!listcounters") {
+		} else if(message.content == prefix + "counterhelp") {
+			message.channel.sendMessage('Command list : https://github.com/Starwort/bot-counter/blob/master/README.md');
+		} else if(message.content == prefix + "listcounters") {
 			var output = '```\r\n';
 			for(var key in counters) {
 				output += counters[key].name + '\r\n';
@@ -324,7 +334,7 @@ function getStep(title) {
 function delCounter(id, title) {
 	if (inputFilter.test(title)) {
 		if (counters[title]) {
-			if (id != counters[title].owner) {
+			if (id != counters[title].owner && id != OwnerID) {
 				return 3;
 			} else {
 				delete counters[title];
