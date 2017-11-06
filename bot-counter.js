@@ -95,7 +95,7 @@ bot.on('message', message => {
                     message.channel.sendMessage('Your counter name contains illegal characters. Please match /^[A-Za-z0-9]+$/.');
                 }
             }
-        } else if (message.content.startsWith(prefix + 'delcounter') || message.content.startsWith('!dc')) {
+        } else if (message.content.startsWith(prefix + 'delcounter') || message.content.startsWith(prefix + 'dc')) {
             if (content.length == 2) {
                 var state = delCounter(message.author.id, content[1]);
                 if (state == 1) {
@@ -134,8 +134,8 @@ bot.on('message', message => {
             }
         } else if (message.content == prefix + "uid") {
             message.channel.sendMessage('Your UID is : ' + message.author.id)
-        } else if (message.content == prefix + "counterhelp") {
-            message.channel.sendMessage('Command list : https://github.com/Starwort/bot-counter/blob/master/README.md');
+        } else if (message.content == prefix + "counterhelp" || message.content == prefix + "help") {
+            message.channel.sendMessage('Command list : https://github.com/Zeptaxis/bot-counter/blob/master/README.md');
         } else if (message.content == prefix + "listcounters") {
             var output = '```\r\n';
             for (var key in counters) {
@@ -221,7 +221,7 @@ bot.on('message', message => {
 bot.login(token);
 
 function addCounter(id, title) {
-    if (inputFilter.test(title) && title != "addcounter" && title != "delcounter") {
+    if (inputFilter.test(title) && title != "addcounter" && title != "delcounter" && title != "ac" && title != "dc") {
         if (counters[title]) {
             return 2;
         } else {
