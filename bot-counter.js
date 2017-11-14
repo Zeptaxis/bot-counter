@@ -30,10 +30,8 @@ if (!token) {
 var ownerID = properties.get('ownerID');
 
 // retrieve the prefix for the bot
-var prefix;
-try {
-    prefix = properties.get('prefix');
-} catch (err) {
+var prefix = properties.get('prefix');
+if (prefix == null) {
     console.log("Adding setting 'prefix' to settings.properties");
     properties.set('prefix', '!');
     prefix = "!";
