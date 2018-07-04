@@ -56,7 +56,8 @@ var dummy = {
     textReset: 'The value of %name% has been reset to %value%.',
     textValue: 'The value of %name% has been set to %value%.',
     textLeaderboard: 'Current leaderboard for %name% :',
-    leaderboard: {}
+    leaderboard: {},
+    whitelist: {}
 };
 
 var userLeaderboardDummy = {
@@ -80,106 +81,119 @@ bot.on('ready', () => {
 bot.on('message', message => {
 
     if (message.content.startsWith(prefix) && message.content.length > 1) {
-        message.content = message.content.replace(mentionFilter, "");
+
+        message.content = message.content.substring(prefix.length); // removes the prefix
+        message.content = message.content.replace(mentionFilter, ""); // TODO change the way this work to be able to handle roles aswell
         var content = message.content.split(" ");
 
-        if (message.content.startsWith(prefix + 'addcounter') || message.content.startsWith(prefix + 'ac')) {
+        //console.log(content);
+
+        function isCmd(cmd) {
+            return content[0] == cmd;
+        }
+
+        function isOwner() {
+            return message.author.id == ownerID;
+        }
+
+        if (isCmd('addcounter') || isCmd('ac')) {
             if (content.length == 2) {
                 var state = addCounter(message.author.id, content[1]);
                 if (state == 1) {
-                    message.channel.sendMessage('The counter has been correctly added.\r\nYou can use it with ' + prefix + content[1] + ' [ + | - ].');
+                    message.channel.send('The counter has been correctly added.\r\nYou can use it with ' + prefix + content[1] + ' [ + | - ].');
                 } else if (state == 2) {
-                    message.channel.sendMessage('A counter with this name already exists, please choose another one.');
+                    message.channel.send('A counter with this name already exists, please choose another one.');
                 } else if (state == 3) {
-                    message.channel.sendMessage('Your counter name contains illegal characters. Please match /^[A-Za-z0-9]+$/.');
+                    message.channel.send('Your counter name contains illegal characters. Please match /^[A-Za-z0-9]+$/.');
                 }
             }
-        } else if (message.content.startsWith(prefix + 'delcounter') || message.content.startsWith(prefix + 'dc')) {
+        } else if (isCmd('delcounter') || isCmd('dc')) {
             if (content.length == 2) {
                 var state = delCounter(message.author.id, content[1]);
                 if (state == 1) {
-                    message.channel.sendMessage('The counter has been correctly deleted.');
+                    message.channel.send('The counter has been correctly deleted.');
                 } else if (state == 2) {
-                    message.channel.sendMessage('There is no counter with this name.');
+                    message.channel.send('There is no counter with this name.');
                 } else if (state == 3) {
-                    message.channel.sendMessage('You are not the owner of this counter.');
+                    message.channel.send('You are not the owner of this counter.');
                 }
             }
-        } else if (message.content == prefix + "log") {
+        } else if (isCmd('log')) {
             console.log(counters);
-        } else if (message.content == prefix + "cleardb") {
-            if (message.author.id == ownerID) {
+        } else if (isCmd("cleardb")) {
+            if (isOwner()) {
                 counters = {};
-                message.channel.sendMessage('Local database has been cleared.');
+                message.channel.send('Local database has been cleared.');
                 saveToDisk();
             } else {
-                message.channel.sendMessage('Sorry, only the owner can do this.');
+                message.channel.send('Sorry, only the owner can do this.');
             }
-        } else if (message.content == prefix + "stop" || message.content == prefix + "exit") {
-            if (message.author.id == ownerID) {
-                message.channel.sendMessage('Stopping');
-                bot.destroy();
-                process.exit(0);
+        } else if (isCmd('stop') || isCmd('exit')) {
+            if (isOwner()) {
+                message.channel.send('Stopping').then(x => {
+                    bot.destroy();
+                    process.exit(0);
+                });
             } else {
-                message.channel.sendMessage('Sorry, only the owner can do this.');
+                message.channel.send('Sorry, only the owner can do this.');
             }
-        } else if (message.content == prefix + "upgradecounters") {
-            if (message.author.id == ownerID) {
+        } else if (isCmd("upgradecounters")) {
+            if (isOwner()) {
                 upgradeCounters();
-                message.channel.sendMessage('Counters have been upgraded. You MUST restart the bot, or weird behaviour could happen.');
+                message.channel.send('Counters have been upgraded. You MUST restart the bot, or weird behaviour could happen.');
                 saveToDisk();
             } else {
-                message.channel.sendMessage('Sorry, only the owner can do this.');
+                message.channel.send('Sorry, only the owner can do this.');
             }
-        } else if (message.content == prefix + "uid") {
-            message.channel.sendMessage('Your UID is : ' + message.author.id)
-        } else if (message.content == prefix + "counterhelp" || message.content == prefix + "help") {
-            message.channel.sendMessage('Command list : https://github.com/Zeptaxis/bot-counter/blob/master/README.md');
-        } else if (message.content == prefix + "listcounters") {
+        } else if (isCmd("uid")) {
+            message.channel.send('Your UID is : ' + message.author.id)
+        } else if (isCmd("counterhelp") || isCmd("help")) {
+            message.channel.send('Command list : https://github.com/Zeptaxis/bot-counter/blob/master/README.md');
+        } else if (isCmd("listcounters")) {
             var output = '```\r\n';
             for (var key in counters) {
                 output += counters[key].name + '\r\n';
             }
             output += '```';
-            message.channel.sendMessage(output);
+            message.channel.send(output);
         } else {
-            var counterName = content[0].substring(1);
+            var counterName = content[0];
             if (counters[counterName]) {
                 if (content.length == 1) {
-                    message.channel.sendMessage(getTextView(counterName));
+                    message.channel.send(getTextView(counterName));
                 } else {
                     if (content[1].startsWith('+')) {
                         if (setValue(counterName, content[1].length == 1 ? "1" : message.content.substring(content[0].length + 2), '+', message.mentions.users)) {
-                            message.channel.sendMessage(getTextPlus(counterName));
+                            message.channel.send(getTextPlus(counterName));
                         } else {
-                            message.channel.sendMessage("There was an error parsing your input.");
+                            message.channel.send("There was an error parsing your input.");
                         }
                     } else if (content[1].startsWith('-')) {
                         if (setValue(counterName, content[1].length == 1 ? "1" : message.content.substring(content[0].length + 2), '-', message.mentions.users)) {
-                            message.channel.sendMessage(getTextMinus(counterName));
+                            message.channel.send(getTextMinus(counterName));
                         } else {
-                            message.channel.sendMessage("There was an error parsing your input.");
+                            message.channel.send("There was an error parsing your input.");
                         }
                     } else if (content[1] == 'reset') {
                         resetValue(counterName);
-                        message.channel.sendMessage(getTextReset(counterName));
+                        message.channel.send(getTextReset(counterName));
                     } else if (content[1] == 'value') {
                         if (content[2]) {
                             if (setValue(counterName, message.content.substring(content[0].length + 1 + content[1].length + 1), '=')) {
-                                message.channel.sendMessage(getTextValue(counterName));
+                                message.channel.send(getTextValue(counterName));
                             } else {
-                                message.channel.sendMessage("There was an error parsing your input.");
+                                message.channel.send("There was an error parsing your input.");
                             }
                         }
                     } else if (content[1] == 'edit') {
                         if (counters[counterName][content[2]]) {
                             var newValue = message.content.substr(message.content.indexOf(content[2]) + content[2].length + 1);
                             setCounterText(counterName, content[2], newValue);
-                            message.channel.sendMessage('Property ' + content[2] + ' has been changed.');
+                            message.channel.send('Property ' + content[2] + ' has been changed.');
                         }
                     } else if (content[1] == 'show') {
                         if (counters[counterName][content[2]]) {
-                            message.channel.sendMessage(content[2] + ' : ' + counters[counterName][content[2]]);
+                            message.channel.send(content[2] + ' : ' + counters[counterName][content[2]]);
                         }
                     } else if (content[1] == 'leaderboard') {
                         var sortable = [];
@@ -198,15 +212,15 @@ bot.on('message', message => {
                             output += (i + 1) + '. ' + sortable[i].username + ' : ' + sortable[i].value + '\r\n';
                         }
                         output += '```';
-                        message.channel.sendMessage(output);
+                        message.channel.send(output);
 
                     } else if (content[1] == 'clearleaderboard') {
-                        if (message.author.id == ownerID) {
+                        if (isOwner()) {
                             counters[counterName].leaderboard = {};
-                            message.channel.sendMessage('Leaderboard for ' + counterName + ' has been cleared.');
+                            message.channel.send('Leaderboard for ' + counterName + ' has been cleared.');
                             saveToDisk();
                         } else {
-                            message.channel.sendMessage('Sorry, only the owner can do this.');
+                            message.channel.send('Sorry, only the owner can do this.');
                         }
                     }
                     saveToDisk();
@@ -224,19 +238,9 @@ function addCounter(id, title) {
         if (counters[title]) {
             return 2;
         } else {
-            counters[title] = {
-                owner: id,
-                value: 0,
-                step: 1,
-                name: title,
-                textView: 'Value of %name% : %value%',
-                textPlus: 'The value of %name% has been incremented. New value : %value%.',
-                textMinus: 'The value of %name% has been decremented. New value : %value%.',
-                textReset: 'The value of %name% has been reset to %value%.',
-                textValue: 'The value of %name% has been set to %value%.',
-                textLeaderboard: 'Current leaderboard for %name% :',
-                leaderboard: {}
-            };
+            counters[title] = JSON.parse(JSON.stringify(dummy));
+            counters[title].owner = id;
+            counters[title].name = title;
             saveToDisk();
             return 1;
         }
@@ -357,7 +361,10 @@ function delCounter(id, title) {
 }
 
 function saveToDisk() {
-    fs.writeFile('counters.json', JSON.stringify(counters), "utf8");
+    fs.writeFile('counters.json', JSON.stringify(counters), "utf8", err => {
+        if (err) throw err;
+        console.log('Counters successfully saved !');
+    });
 }
 
 // this function take the existing counters and upgrade them to the newest counter prototype
