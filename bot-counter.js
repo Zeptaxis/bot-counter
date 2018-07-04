@@ -118,7 +118,7 @@ bot.on('message', message => {
         } else if (message.content == prefix + "stop" || message.content == prefix + "exit") {
             if (message.author.id == ownerID) {
                 message.channel.sendMessage('Stopping');
-                bot.logout();
+                bot.destroy();
                 process.exit(0);
             } else {
                 message.channel.sendMessage('Sorry, only the owner can do this.');
