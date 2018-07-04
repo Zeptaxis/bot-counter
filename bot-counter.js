@@ -32,7 +32,8 @@ var ownerID = properties.get('ownerID');
 // retrieve the prefix for the bot
 var prefix = properties.get('prefix');
 if (!prefix) {
-    console.log("Adding setting 'prefix' to settings.properties");
+    console.log("Please add setting 'prefix' to settings.properties !");
+	console.log("Using default prefix : !");
     properties.set('prefix', '!');
     prefix = "!";
 };
